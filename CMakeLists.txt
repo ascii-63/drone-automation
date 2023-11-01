@@ -11,8 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
 # Add -pthread flag for multi-threading
 find_package(Threads REQUIRED)
 
+# PAHO.MQTT.CPP
+find_package(PahoMqttCpp REQUIRED)
+
 include_directories(
-    ./include
+    include
 )
 
 # Specify library directories for jsoncpp and yaml-cpp
@@ -33,21 +36,31 @@ target_link_libraries(
 
 set(DRONE_LIB_SRC ./include/drone-automation-lib.cpp)
 add_library(drone_lib SHARED ${DRONE_LIB_SRC})
-target_link_libraries(
-    drone_lib
+target_link_libraries(drone_lib
     ${catkin_LIBRARIES}
     jsoncpp
     yaml-cpp
     Threads::Threads
     mission_lib
+
+    # ${MISSION_LIB_SRC}
 )
 
 add_executable(mid-man ./src/mid-man.cpp)
-target_link_libraries(
-    mid-man
+target_link_libraries(mid-man
     ${catkin_LIBRARIES}
     jsoncpp
     yaml-cpp
     Threads::Threads
     drone_lib
+    mission_lib
+
+    # ${MISSION_LIB_SRC}
+    # ${DRONE_LIB_SRC}
+)
+
+# ###########################################
+add_executable(async_publish ./temp/async_publish.cpp)
+target_link_libraries(async_publish
+    ${PAHO_CPP_LIB}
 )

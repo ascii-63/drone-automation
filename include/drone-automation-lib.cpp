@@ -1,6 +1,6 @@
 #include "./drone-automation-lib.h"
 
-inline void System::command_sys(const std::string &_command)
+void System::command_sys(const std::string &_command)
 {
     std::system(_command.c_str());
 }
@@ -22,7 +22,7 @@ void System::runCommand_system(const std::string &_command, const std::vector<st
     thr.detach(); // Detach the thread to run independently
 }
 
-inline void System::threadSleeper(const int _time)
+void System::threadSleeper(const int _time)
 {
     std::chrono::seconds pauseTime(_time);
     std::this_thread::sleep_for(pauseTime);
@@ -52,7 +52,7 @@ std::vector<std::string> System::getPIDList(const std::string _command_name)
     return result;
 }
 
-inline bool System::jsonParsingToObject(const std::string _path_to_json_file, MissionRequest &_mission)
+bool System::jsonParsingToObject(const std::string _path_to_json_file, MissionRequest &_mission)
 {
     if (jsonParsing::parsing(_path_to_json_file, _mission))
     {
@@ -82,7 +82,6 @@ void System::sendImage(const int _device, const std::string &_drone_id)
 
     default:
         Communication::netcat::sendMessage_echo_netcat("[ WARN] Invalid device id, this image will not be send.", DEFAULT_COMM_MSG_PORT);
-        System::sleepLessThanASecond(0.1);
         break;
     }
     curl_argv.push_back(ss.str());
@@ -94,7 +93,7 @@ void System::sendImage(const int _device, const std::string &_drone_id)
     System::runCommand_system(curl_cmd, curl_argv);
 }
 
-inline std::string System::DEVICE_enumToString(const int _num)
+std::string System::DEVICE_enumToString(const int _num)
 {
     switch (_num)
     {
@@ -135,7 +134,7 @@ inline std::string System::DEVICE_enumToString(const int _num)
     }
 }
 
-inline std::string System::PERIPHERAL_STATUS_enumToString(const int _num)
+std::string System::PERIPHERAL_STATUS_enumToString(const int _num)
 {
     switch (_num)
     {
@@ -154,7 +153,7 @@ inline std::string System::PERIPHERAL_STATUS_enumToString(const int _num)
     }
 }
 
-inline bool System::camFlagChecker(const std::vector<std::string> &_flag_vector)
+bool System::camFlagChecker(const std::vector<std::string> &_flag_vector)
 {
     for (auto flag : _flag_vector)
     {
@@ -164,7 +163,7 @@ inline bool System::camFlagChecker(const std::vector<std::string> &_flag_vector)
     return true;
 }
 
-inline void System::sleepLessThanASecond(const float _time)
+void System::sleep_msecs(const float _time)
 {
     struct timespec sleepTime;
     sleepTime.tv_sec = 0;
@@ -217,7 +216,6 @@ bool System::getNewestFLAG(const int _port, std::string &_flag_handle)
     if (line != FLAG_ALLOW_TO_FLY && line != FLAG_DENY_TO_FLY)
     {
         Communication::netcat::sendMessage_echo_netcat("[ERROR] Not received any CONFIRM FLAGs after TIMEOUT duration, stop listening.", DEFAULT_COMM_MSG_PORT);
-        System::sleepLessThanASecond(0.1);
         _flag_handle = "";
         return false;
     }
@@ -226,7 +224,7 @@ bool System::getNewestFLAG(const int _port, std::string &_flag_handle)
     return true;
 }
 
-inline void System::renameWithID(const std::string &_path_to_dir, const std::string &_file_name)
+void System::renameWithID(const std::string &_path_to_dir, const std::string &_file_name)
 {
     std::string path = _path_to_dir;
     std::string cmd = "mv";
@@ -243,15 +241,14 @@ inline void System::renameWithID(const std::string &_path_to_dir, const std::str
     System::runCommand_system(cmd, argv);
 }
 
-inline bool System::seqControllerLauching()
+bool System::seqControllerLauching()
 {
     try
     {
-        std::string cmd = "rosrun";
+        std::string cmd = "bash";
         std::vector<std::string> argv;
-        argv.push_back("sequence_controller");
-        argv.push_back("parser");
-        argv.push_back("&");
+        std::string path = get_current_dir_name();
+        path = path + "/../bash/seq_controller.sh";
         System::runCommand_system(cmd, argv);
     }
     catch (const std::exception &e)
@@ -263,7 +260,7 @@ inline bool System::seqControllerLauching()
 
 /******************************************************************************/
 
-inline void Communication::netcat::sendMessage_echo_netcat(const std::string &_message, const int _port)
+void Communication::netcat::sendMessage_echo_netcat(const std::string &_message, const int _port)
 {
     std::string command = "echo";
     std::vector<std::string> argv;
@@ -276,6 +273,7 @@ inline void Communication::netcat::sendMessage_echo_netcat(const std::string &_m
     argv.push_back(std::to_string(_port));
 
     System::runCommand_system(command, argv);
+    System::sleep_msecs(0.1);
 }
 
 std::string Communication::netcat::receiveMessage_netcat(const int _port, const int _timeout, bool &_result)
@@ -327,31 +325,445 @@ std::string Communication::netcat::receiveMessage_netcat(const int _port, const 
 
 /******************************************************************************/
 
-inline vector3 Drone::GPStoUTM(const vector3 &_gps)
+int YAMLConvert::terminatorToFailsafe(const int _terminator)
 {
-    double UTM_X, UTM_Y;
-    double GPS_X, GPS_Y;
+    switch (_terminator)
+    {
+    case Terminator::TERMINATION_STD:
+        return mission.number_sequence_items;
 
-    GPS_X = _gps[0];
-    GPS_Y = _gps[1];
-    double ALT = _gps[2];
+    case Terminator::TERMINATION_AUTO:
+        return mission.number_sequence_items + 1;
 
-    LatLonToUTMXY(GPS_X, GPS_Y, 48, UTM_X, UTM_Y);
-
-    vector3 result;
-    result.push_back(UTM_X);
-    result.push_back(UTM_Y);
-    result.push_back(ALT);
-
-    return result;
+    default:
+        return -1;
+    }
+    return -1;
 }
 
-inline vector3 Drone::UTMtoLocal(const vector3 &_home_utm, const vector3 &_point_utm)
+bool YAMLConvert::seqHandle(SingleInstruction *_instruction, YAML::Emitter &_emitter)
 {
-    vector3 result;
-    result.push_back(_point_utm[0] - _home_utm[0]);
-    result.push_back(_point_utm[1] - _home_utm[1]);
-    result.push_back(_point_utm[2] - _home_utm[2]);
+    if (_instruction->name == "action_sequence")
+        return actionSeqHandle(_instruction, _emitter);
+    else if (_instruction->name == "travel_sequence")
+        return travelSeqHandle(_instruction, _emitter);
+    return false;
+}
 
-    return result;
+bool YAMLConvert::actionSeqHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    const int action = _action_instruction->Action_getAction();
+    switch (action)
+    {
+    case Action::ACTION_ARUCO:
+        return YAMLConvert::ActionHandle::arucoHandle(_action_instruction, _emitter);
+
+    case Action::ACTION_AUTOLAND:
+        return YAMLConvert::ActionHandle::autoLandHandle(_action_instruction, _emitter);
+
+    case Action::ACTION_DISARM:
+        return YAMLConvert::ActionHandle::disArmHandle(_action_instruction, _emitter);
+
+    case Action::ACTION_RELEASE:
+        return YAMLConvert::ActionHandle::releaseHandle(_action_instruction, _emitter);
+
+    case Action::ACTION_RTLHOME:
+        return YAMLConvert::ActionHandle::returnHomeHandle(_action_instruction, _emitter);
+
+    case Action::ACTION_SELFCHECK:
+        return YAMLConvert::ActionHandle::selfCheckHandle(_action_instruction, _emitter);
+
+    case Action::ACTION_TAKEOFF:
+        return YAMLConvert::ActionHandle::takeOffHandle(_action_instruction, _emitter);
+
+    case Action::ACTION_WHYCON:
+        return YAMLConvert::ActionHandle::whyconHandle(_action_instruction, _emitter);
+
+    default:
+        Communication::netcat::sendMessage_echo_netcat("[ERROR] This Action Instruction has a invalid Action.", DEFAULT_COMM_MSG_PORT);
+        return false;
+    }
+    return false;
+}
+
+bool YAMLConvert::travelSeqHandle(SingleInstruction *_travel_instruction, YAML::Emitter &_emitter)
+{
+    int planner;                      // PLanner
+    std::vector<vector3> waypoints;   // Waypoints
+    std::vector<vector3> constraints; // Constraints
+    vector3 vmax, amax;               // Vmax and Amax
+    int terminator;                   // Terminator
+    /********************************************************************/
+    std::string type;                             // Type field
+    int count;                                    // Count field
+    double timeout;                               // Timeout field
+    int failsafe;                                 // Failsafe field
+    std::map<std::string, vector3> waypoints_map; // Local points map
+
+    planner = _travel_instruction->Travel_getPlanner();
+    _travel_instruction->Travel_getWaypoints(waypoints);
+    _travel_instruction->Travel_getConstraints(constraints);
+    if (constraints.size() > 0)
+        vmax = constraints[0];
+    if (constraints.size() > 1)
+        amax = constraints[1];
+    terminator = _travel_instruction->Travel_getTerminator();
+
+    /*************************************************/
+
+    type = "m";
+    count = waypoints.size();
+    timeout = _travel_instruction->Travel_getTimeOut();
+
+    // Update the waypoints map with waypoint and it's name.
+    for (int i = 0; i < waypoints.size(); i++)
+    {
+        std::string name = "t" + std::to_string(i + 1);
+        waypoints_map[name] = waypoints[i];
+    }
+
+    failsafe = terminatorToFailsafe(terminator);
+
+    /*************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "count" << YAML::Value << count;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    for (int i = 0; i < waypoints.size(); i++)
+    {
+        std::string name = "t" + std::to_string(i + 1);
+        _emitter << YAML::Key << name << YAML::Value << waypoints_map[name];
+    }
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
+}
+
+void YAMLConvert::addAdditionSeqToYAML(YAML::Emitter &_emitter)
+{
+    int pre_last_seq_index = terminatorToFailsafe(Terminator::TERMINATION_STD);
+    std::string pre_last_seq_str = "s" + std::to_string(pre_last_seq_index);
+
+    _emitter << YAML::Key << pre_last_seq_str;
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << "m";
+    _emitter << YAML::Key << "count" << YAML::Value << int(1);
+    _emitter << YAML::Key << "timeout" << YAML::Value << float(60.0);
+    _emitter << YAML::Key << "t1" << YAML::Value << home_gps;
+    // _emitter << YAML::Key << "t1" << YAML::Value << home_local;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << terminatorToFailsafe(Terminator::TERMINATION_AUTO);
+    _emitter << YAML::EndMap;
+
+    int last_seq_index = pre_last_seq_index + 1;
+    std::string last_seq_str = "s" + std::to_string(last_seq_index);
+
+    _emitter << YAML::Key << last_seq_str;
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << "l";
+    _emitter << YAML::Key << "timeout" << YAML::Value << float(60.0);
+    _emitter << YAML::Key << "failsafe" << YAML::Value << int(0);
+    _emitter << YAML::EndMap;
+}
+
+bool YAMLConvert::fromMisisonToYAML(const std::string &_yaml_file_path)
+{
+    int count = mission.number_sequence_items + 1; // count field in yaml
+    int goal = mission.number_sequence_items - 1;  // goal field in yaml
+    int seq_index = 1;                             // Sequence index in mission object, start at 1 (0 is init)
+    std::ofstream seq_yaml(_yaml_file_path, std::ofstream::out | std::ofstream::trunc);
+    if (!seq_yaml.is_open())
+    {
+        Communication::netcat::sendMessage_echo_netcat("[ERROR] Failed to open seq.yaml file.", DEFAULT_COMM_MSG_PORT);
+        return false;
+    }
+
+    YAML::Emitter emitter; // Write to YAML file to emitter
+    emitter << YAML::BeginMap;
+    emitter << YAML::Key << "count" << YAML::Value << count;
+    emitter << YAML::Key << "goal" << YAML::Value << goal;
+
+    // Write from SingleInstruction to YAML file one by one
+    while (seq_index < mission.number_sequence_items)
+    {
+        std::string seq_name = "s" + std::to_string(seq_index);
+        emitter << YAML::Key << seq_name;
+        if (!seqHandle(mission.sequence_istructions[seq_index], emitter))
+            return false;
+        seq_index++;
+    }
+
+    // Add 2 last sequences to yaml file
+    addAdditionSeqToYAML(emitter);
+
+    emitter << YAML::EndMap;
+
+    seq_yaml << emitter.c_str();
+    seq_yaml.close();
+
+    return true;
+}
+
+bool YAMLConvert::ActionHandle::arucoHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    double param;   // Param value in Action Instruction
+    double timeout; // Time-out value in Action Instruction
+    int terminator; // Terminator value in Action Instruction
+
+    std::string type; // Type field
+    double height;    // Height field
+    int failsafe;     // Failsafe field
+
+    /******************************************************/
+
+    param = _action_instruction->Action_getParam();
+    timeout = _action_instruction->Action_getTimeOut();
+    terminator = _action_instruction->Action_getTerminator();
+
+    /******************************************************/
+
+    type = "a";
+    height = param;
+    failsafe = terminatorToFailsafe(terminator);
+
+    /******************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "height" << YAML::Value << height;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
+}
+
+bool YAMLConvert::ActionHandle::autoLandHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    double param;   // Param value in Action Instruction
+    double timeout; // Time-out value in Action Instruction
+    int terminator; // Terminator value in Action Instruction
+
+    std::string type; // Type field
+    double velocity;  // Velocity field
+    int failsafe;     // Failsafe field
+
+    /******************************************************/
+
+    param = _action_instruction->Action_getParam();
+    timeout = _action_instruction->Action_getTimeOut();
+    terminator = _action_instruction->Action_getTerminator();
+
+    /******************************************************/
+
+    type = "l";
+    velocity = param;
+    failsafe = terminatorToFailsafe(terminator);
+
+    /******************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "velocity" << YAML::Value << velocity;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
+}
+
+bool YAMLConvert::ActionHandle::disArmHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    double timeout; // Time-out value in Action Instruction
+    int terminator; // Terminator value in Action Instruction
+
+    std::string type; // Type field
+    int failsafe;     // Failsafe field
+
+    /******************************************************/
+
+    timeout = _action_instruction->Action_getTimeOut();
+    terminator = _action_instruction->Action_getTerminator();
+
+    /******************************************************/
+
+    type = "d";
+    failsafe = terminatorToFailsafe(terminator);
+
+    /******************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
+}
+
+bool YAMLConvert::ActionHandle::releaseHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    double param;   // Param value in Action Instruction
+    double timeout; // Time-out value in Action Instruction
+    int terminator; // Terminator value in Action Instruction
+
+    std::string type; // Type field
+    int package;      // Package field
+    int failsafe;     // Failsafe field
+
+    /******************************************************/
+
+    param = _action_instruction->Action_getParam();
+    timeout = _action_instruction->Action_getTimeOut();
+    terminator = _action_instruction->Action_getTerminator();
+
+    /******************************************************/
+
+    type = "r";
+    package = static_cast<int>(param);
+    failsafe = terminatorToFailsafe(terminator);
+
+    /******************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "package" << YAML::Value << package;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
+}
+
+bool YAMLConvert::ActionHandle::returnHomeHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    double timeout; // Time-out value in Action Instruction
+    int terminator; // Terminator value in Action Instruction
+
+    std::string type; // Type field
+    int count;        // Count field
+    vector3 t1;       // t1 filed (home position in local)
+    int failsafe;     // Failsafe field
+
+    /******************************************************/
+
+    timeout = _action_instruction->Action_getTimeOut();
+    terminator = _action_instruction->Action_getTerminator();
+
+    /******************************************************/
+
+    type = "m";
+    count = 1;
+    t1 = home_gps;
+    failsafe = terminatorToFailsafe(terminator);
+
+    /******************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "count" << YAML::Value << count;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    _emitter << YAML::Key << "t1" << YAML::Value << t1;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
+}
+
+bool YAMLConvert::ActionHandle::selfCheckHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    double timeout; // Time-out value in Action Instruction
+    int terminator; // Terminator value in Action Instruction
+
+    std::string type; // Type field
+    int failsafe;     // Failsafe field
+
+    /******************************************************/
+
+    timeout = _action_instruction->Action_getTimeOut();
+    terminator = _action_instruction->Action_getTerminator();
+
+    /******************************************************/
+
+    type = "s";
+    failsafe = terminatorToFailsafe(terminator);
+
+    /******************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
+}
+
+bool YAMLConvert::ActionHandle::takeOffHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    double param;   // Param value in Action Instruction
+    double timeout; // Time-out value in Action Instruction
+    int terminator; // Terminator value in Action Instruction
+
+    std::string type; // Type field
+    double height;    // Velocity field
+    int failsafe;     // Failsafe field
+
+    /******************************************************/
+
+    param = _action_instruction->Action_getParam();
+    timeout = _action_instruction->Action_getTimeOut();
+    terminator = _action_instruction->Action_getTerminator();
+
+    /******************************************************/
+
+    type = "t";
+    height = param;
+    failsafe = terminatorToFailsafe(terminator);
+
+    /******************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "height" << YAML::Value << height;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
+}
+
+bool YAMLConvert::ActionHandle::whyconHandle(SingleInstruction *_action_instruction, YAML::Emitter &_emitter)
+{
+    double param;   // Param value in Action Instruction
+    double timeout; // Time-out value in Action Instruction
+    int terminator; // Terminator value in Action Instruction
+
+    std::string type; // Type field
+    double height;    // Height field
+    int failsafe;     // Failsafe field
+
+    /******************************************************/
+
+    param = _action_instruction->Action_getParam();
+    timeout = _action_instruction->Action_getTimeOut();
+    terminator = _action_instruction->Action_getTerminator();
+
+    /******************************************************/
+
+    type = "w";
+    height = param;
+    failsafe = terminatorToFailsafe(terminator);
+
+    /******************************************************/
+
+    _emitter << YAML::BeginMap;
+    _emitter << YAML::Key << "type" << YAML::Value << type;
+    _emitter << YAML::Key << "height" << YAML::Value << height;
+    _emitter << YAML::Key << "timeout" << YAML::Value << timeout;
+    _emitter << YAML::Key << "failsafe" << YAML::Value << failsafe;
+    _emitter << YAML::EndMap;
+
+    return true;
 }
