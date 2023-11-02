@@ -24,8 +24,9 @@ public:
     void connection_lost(const std::string &cause) override;
 };
 
-auto connOpts = mqtt::connect_options_builder()
-                    .clean_session(false)
-                    .finalize();
+auto connection_options = mqtt::connect_options_builder()
+                              .clean_session(true)
+                              // .clean_session(false)
+                              .finalize();
 
 #endif

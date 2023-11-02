@@ -323,6 +323,149 @@ std::string Communication::netcat::receiveMessage_netcat(const int _port, const 
     return result;
 }
 
+//////////////////////////////////////////////
+
+Communication::MQTT::Publisher::Publisher() {}
+
+Communication::MQTT::Publisher::Publisher(const std::string &_server_addr,
+                                          const std::string &_client_id,
+                                          const std::string _topic) : server_address(_server_addr),
+                                                                      client_id(_client_id),
+                                                                      topic(_topic)
+{
+}
+
+Communication::MQTT::Publisher::~Publisher() {}
+
+bool Communication::MQTT::Publisher::connect()
+{
+    client = new mqtt::async_client(server_address, client_id, DEFAULT_PERSIST_DIR);
+    try
+    {
+        mqtt::token_ptr connection_token = client->connect(connection_options);
+        connection_token->wait();
+    }
+    catch (const mqtt::exception &exc)
+    {
+        std::cerr << exc.what() << '\n';
+        return false;
+    }
+    return true;
+}
+
+void Communication::MQTT::Publisher::publish(const std::string &_message)
+{
+    try
+    {
+        mqtt::message_ptr pub_msg = mqtt::make_message(topic, _message);
+        pub_msg->set_qos(DEFAULT_QOS);
+        client->publish(pub_msg)->wait_for(DEFAULT_TIMEOUT);
+    }
+    catch (const mqtt::exception &exc)
+    {
+        std::cerr << exc.what() << std::endl
+                  << "Message droped: "
+                  << _message
+                  << std::endl;
+    }
+    System::sleep_msecs(0.1);
+}
+
+void Communication::MQTT::Publisher::disconnect()
+{
+    try
+    {
+        client->disconnect()->wait();
+    }
+    catch (const mqtt::exception &exc)
+    {
+        std::cerr << exc.what() << '\n';
+    }
+}
+
+//////////////////////////////////////////////
+
+Communication::MQTT::Consumer::Consumer() {}
+
+Communication::MQTT::Consumer::Consumer(const std::string &_server_addr,
+                                        const std::string &_client_id,
+                                        const std::string _topic) : server_address(_server_addr),
+                                                                    client_id(_client_id),
+                                                                    topic(_topic)
+{
+}
+
+Communication::MQTT::Consumer::~Consumer() {}
+
+bool Communication::MQTT::Consumer::connect()
+{
+    client = new mqtt::async_client(server_address, client_id);
+    std::cout << "OK 1" << std::endl;
+    try
+    {
+        // Connect to the server
+        auto token = client->connect(connection_options);
+
+        // Getting the connect response will block waiting for the connection to complete
+        auto response = token->get_connect_response();
+
+        // If there is no session present, then we need to subscribe, but if
+        // there is a session, then the server remembers us and our
+        // subscriptions.
+        if (!response.is_session_present())
+            client->subscribe(topic, DEFAULT_QOS)->wait();
+    }
+    catch (const mqtt::exception &exc)
+    {
+        std::cerr << exc.what() << '\n';
+        return false;
+    }
+    std::cout << "OK 2" << std::endl;
+    return true;
+}
+
+std::string Communication::MQTT::Consumer::consume()
+{
+    try
+    {
+        auto message = client->consume_message();
+        if (!message)
+            return ERROR_CONSUME_MESSAGE;
+
+        return message->to_string();
+    }
+    catch (const std::system_error &e)
+    {
+        std::cout << "Caught system_error with code ["
+                  << e.code() << "] meaning ["
+                  << e.what() << "]\n";
+    }
+    return ERROR_CONSUME_MESSAGE;
+
+    // mqtt::const_message_ptr *this_msg;
+    // if (client->try_consume_message(this_msg))
+    // {
+    //     mqtt::const_message_ptr msg(*this_msg);
+    //     if (!msg)
+    //         return ERROR_CONSUME_MESSAGE;
+
+    //     return msg->to_string();
+    // }
+    // return ERROR_CONSUME_MESSAGE;
+}
+
+void Communication::MQTT::Consumer::disconnect()
+{
+    try
+    {
+        client->disconnect()->wait();
+    }
+    catch (const mqtt::exception &exc)
+    {
+        std::cerr << exc.what() << '\n';
+    }
+}
+
 /******************************************************************************/
 
 int YAMLConvert::terminatorToFailsafe(const int _terminator)

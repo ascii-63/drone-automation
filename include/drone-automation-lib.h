@@ -17,6 +17,7 @@
 #include <algorithm>
 
 #include <yaml-cpp/yaml.h>
+#include "mqtt/async_client.h"
 
 #include "./mission_v1.h"
 #include "./UTM.h"
@@ -92,34 +93,48 @@ namespace Communication
 
     namespace MQTT
     {
+        const std::string ERROR_CONSUME_MESSAGE = "ERROR_CONSUME_MESSAGE";
+
         class Publisher
         {
         public:
             Publisher();
-            Publisher(const std::string &_server_addr, const std::string &_client_id, const std::string _topic);
+            Publisher(const std::string &_server_addr,
+                      const std::string &_client_id,
+                      const std::string _topic);
             ~Publisher();
 
             bool connect();
             void publish(const std::string &_message);
             void disconnect();
 
-        private:
+        public:
             std::string server_address;
             std::string client_id;
             std::string topic;
 
-            mqtt::async_client client;
+            mqtt::async_client *client;
         };
 
         class Consumer
         {
-            public:
-                Consumer();
-                Consumer(const std::string &_server_addr, const std::string &_client_id, const std::string _topic);
-                ~Consumer();
+        public:
+            Consumer();
+            Consumer(const std::string &_server_addr,
+                     const std::string &_client_id,
+                     const std::string _topic);
+            ~Consumer();
 
-                bool connect();
-                std::string consume();
+            bool connect();
+            std::string consume();
+            void disconnect();
+
+        public:
+            std::string server_address;
+            std::string client_id;
+            std::string topic;
+
+            mqtt::async_client *client;
         };
     };
 };

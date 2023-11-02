@@ -76,3 +76,27 @@ add_executable(async_consume ./temp/async_consume.cpp)
 target_link_libraries(async_consume
     PahoMqttCpp::paho-mqttpp3
 )
+
+add_executable(test_a_p ./temp/test_lib_a_p.cpp)
+target_link_libraries(test_a_p
+    jsoncpp
+    yaml-cpp
+    Threads::Threads
+    PahoMqttCpp::paho-mqttpp3
+
+    mission_lib
+    mqtt_lib
+    drone_lib
+)
+
+add_executable(test_a_c ./temp/test_lib_a_c.cpp)
+target_link_libraries(test_a_c
+    jsoncpp
+    yaml-cpp
+    Threads::Threads
+    PahoMqttCpp::paho-mqttpp3
+
+    mission_lib
+    mqtt_lib
+    drone_lib
+)
