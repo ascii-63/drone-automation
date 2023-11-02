@@ -24,43 +24,55 @@ include_directories(
     ${catkin_INCLUDE_DIRS}
 )
 
+# Mission library
 set(MISSION_LIB_SRC ./include/mission_v1.cpp)
 add_library(mission_lib SHARED ${MISSION_LIB_SRC})
-target_link_libraries(
-    mission_lib
-    ${catkin_LIBRARIES}
+target_link_libraries(mission_lib
     jsoncpp
-    yaml-cpp
     Threads::Threads
+    PahoMqttCpp::paho-mqttpp3
 )
 
+# MQTT library
+set(MQTT_LIB_SRC ./include/mqtt-lib.cpp)
+add_library(mqtt_lib SHARED ${MQTT_LIB_SRC})
+target_link_libraries(mqtt_lib
+    Threads::Threads
+    PahoMqttCpp::paho-mqttpp3
+)
+
+# Drone automation library
 set(DRONE_LIB_SRC ./include/drone-automation-lib.cpp)
 add_library(drone_lib SHARED ${DRONE_LIB_SRC})
 target_link_libraries(drone_lib
-    ${catkin_LIBRARIES}
     jsoncpp
     yaml-cpp
     Threads::Threads
-    mission_lib
 
-    # ${MISSION_LIB_SRC}
+    mission_lib
 )
 
+# Mid-man
 add_executable(mid-man ./src/mid-man.cpp)
 target_link_libraries(mid-man
     ${catkin_LIBRARIES}
     jsoncpp
     yaml-cpp
     Threads::Threads
-    drone_lib
-    mission_lib
+    PahoMqttCpp::paho-mqttpp3
 
-    # ${MISSION_LIB_SRC}
-    # ${DRONE_LIB_SRC}
+    mission_lib
+    mqtt_lib
+    drone_lib
 )
 
 # ###########################################
 add_executable(async_publish ./temp/async_publish.cpp)
 target_link_libraries(async_publish
-    ${PAHO_CPP_LIB}
+    PahoMqttCpp::paho-mqttpp3
+)
+
+add_executable(async_consume ./temp/async_consume.cpp)
+target_link_libraries(async_consume
+    PahoMqttCpp::paho-mqttpp3
 )

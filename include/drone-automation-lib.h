@@ -18,8 +18,9 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include "./mission_v1.cpp"
+#include "./mission_v1.h"
 #include "./UTM.h"
+#include "./mqtt-lib.h"
 
 #define vector3 std::vector<double>
 
@@ -91,7 +92,35 @@ namespace Communication
 
     namespace MQTT
     {
+        class Publisher
+        {
+        public:
+            Publisher();
+            Publisher(const std::string &_server_addr, const std::string &_client_id, const std::string _topic);
+            ~Publisher();
 
+            bool connect();
+            void publish(const std::string &_message);
+            void disconnect();
+
+        private:
+            std::string server_address;
+            std::string client_id;
+            std::string topic;
+
+            mqtt::async_client client;
+        };
+
+        class Consumer
+        {
+            public:
+                Consumer();
+                Consumer(const std::string &_server_addr, const std::string &_client_id, const std::string _topic);
+                ~Consumer();
+
+                bool connect();
+                std::string consume();
+        };
     };
 };
 
