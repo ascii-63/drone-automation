@@ -1,5 +1,5 @@
 build/
 .vscode/
-./catkin_ws/logs/
-./catkin_ws/devel/
-./catkin_ws/.catkin_tools/
+/catkin_ws/logs/
+/catkin_ws/devel/
+/catkin_ws/.catkin_tools/
