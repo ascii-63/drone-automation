@@ -11,6 +11,7 @@ int main()
     {
         std::string message = "Message #" + std::to_string(i);
         client->publish(message);
+        std::cout << "[x] Send: " << message << std::endl;
         System::sleep_msecs(0.1);
     }
 

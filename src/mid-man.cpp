@@ -5,9 +5,14 @@
 #include "drone-automation-lib.h"
 
 std::string mission_file; // Path to .json mission file
+Communication::MQTT::Publisher *device_pub = new Communication::MQTT::Publisher(DEFAULT_SERVER_ADDRESS, "mm_device_pub_client", MQTT_DEVICE_LIST_TOPIC);
+Communication::MQTT::Consumer *device_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS, "mm_device_sub_client", MQTT_DEVICE_STATUS_TOPIC);
+Communication::MQTT::Consumer *mav_state_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS, "mm_mav_state_sub_client", MQTT_MAV_STATE_TOPIC);
 
-/* Lauch all requirement package in the bash file */
-inline void requirementInit()
+/* Lauch all requirement package in the bash file,
+Connect to the MQTT Server
+*/
+inline bool requirementInit()
 {
     std::string cmd = "bash";
     std::vector<std::string> argv;
@@ -15,9 +20,29 @@ inline void requirementInit()
     std::string path_to_bash_scripts = get_current_dir_name();
     path_to_bash_scripts = path_to_bash_scripts + "/../bash/requirement.sh";
 
-    System::runCommand_system(cmd, argv);
-    cmd.clear();
-    argv.clear();
+    try
+    {
+
+        System::runCommand_system(cmd, argv);
+        cmd.clear();
+        argv.clear();
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+        Communication::netcat::sendMessage_echo_netcat("[ERROR] Package lauching error.", DEFAULT_COMM_MSG_PORT);
+        return false;
+    }
+
+    ////////////////////////////
+
+    if (!device_pub->connect() || !device_sub->connect() || !mav_state_sub->connect())
+    {
+        Communication::netcat::sendMessage_echo_netcat("MQTT Startup error.", DEFAULT_COMM_MSG_PORT);
+        return false;
+    }
+
+    return true;
 }
 
 // Search for new misison file
@@ -40,14 +65,81 @@ std::string missionFileWatcher()
     }
 }
 
-// Peripherals check
+// Send MAV state and Device status to communation service in human-readable format
+void sendDeviceStatus(const std::string &_mav_state, const std::string &_status)
+{
+    std::stringstream ss(_status);
+    std::vector<int> device_status;
+    int status_num;
+    while (ss >> status_num)
+        device_status.push_back(status_num);
+
+    ss.clear();
+    ss << std::endl
+       << "========================================" << std::endl; // 40 "="
+    ss << std::setw(24) << "MAV_STATE: " << _mav_state << std::endl
+       << std::endl;
+    for (int i = 0; i < device_status.size(); i++)
+        ss << std::setw(22) << System::DEVICE_enumToString(i) << ": " << System::PERIPHERAL_STATUS_enumToString(device_status[i]) << std::endl;
+    ss << "========================================" << std::endl; // 40 "="
+
+    Communication::netcat::sendMessage_echo_netcat(ss.str(), DEFAULT_COMM_MSG_PORT);
+}
+
+/* Peripherals check:
+1. Send device ID to control_pkg
+2. Get device status from control_pkg
+3. Send image base on device status
+*/
 bool peripheralsCheck()
 {
-    /* PENDING */
+    std::vector<int> device_list;
+    mission.sequence_istructions[0]->Init_getPeripherals(device_list);
+    std::stringstream ss;
+    for (auto dev : device_list)
+        ss << dev << " ";
+    std::string msg = ss.str();
+    msg.pop_back();
+
+    device_pub->publish(msg);
+
+    //////////////////////////////////
+
+    std::string status = device_sub->consume();
+    if (status == Communication::MQTT::ERROR_CONSUME_MESSAGE)
+    {
+        Communication::netcat::sendMessage_echo_netcat("[ERROR] Bad consume.", DEFAULT_COMM_MSG_PORT);
+        return false;
+    }
+
+    std::string mav_state = mav_state_sub->consume();
+    if (mav_state == Communication::MQTT::ERROR_CONSUME_MESSAGE)
+    {
+        Communication::netcat::sendMessage_echo_netcat("[ERROR] Bad consume.", DEFAULT_COMM_MSG_PORT);
+        return false;
+    }
+
+    sendDeviceStatus(mav_state, status);
+
+    //////////////////////////////////
+
+    int FLIR_status = status[0], D455_status = status[1];
+    if (FLIR_status == PERIPHERAL_STATUS::ACTIVE)
+    {
+        // PENDING
+    }
+    if (D455_status == PERIPHERAL_STATUS::ACTIVE)
+    {
+        // PENDING
+    }
+    
     return true;
 }
 
-/* This function performs the process of sending and receiving decisions between UAV and GCS
+/* This function performs the process of sending and receiving decisions between UAV and GCS:
+1. Get image confirm
+2. Send request to fly to comm
+3. Receive fly confirm from comm
  */
 bool confirmProcess()
 {
@@ -115,7 +207,20 @@ bool missionExecution()
     return true;
 }
 
+void cleaner()
+{
+    device_pub->disconnect();
+    device_pub->disconnect();
+    mav_state_sub->disconnect();
+}
+
 int main()
 {
+    if (!requirementInit())
+        return -1;
+    if (!missionExecution())
+        return -2;
+    cleaner();
+
     return 0;
 }

@@ -10,13 +10,13 @@ int enumConvert::stringToPeripheral(const std::string inputString)
     {
         return PERIPHERAL_UNSPECIFIED;
     }
-    else if (inputString == "PERIPHERAL_CAM_DOWNWARD")
+    else if (inputString == "PERIPHERAL_CAM_FLIR")
     {
-        return PERIPHERAL_CAM_DOWNWARD;
+        return PERIPHERAL_CAM_FLIR;
     }
-    else if (inputString == "PERIPHERAL_CAM_FORWARD")
+    else if (inputString == "PERIPHERAL_CAM_D455")
     {
-        return PERIPHERAL_CAM_FORWARD;
+        return PERIPHERAL_CAM_D455;
     }
     else if (inputString == "PERIPHERAL_LIDAR")
     {
@@ -26,9 +26,9 @@ int enumConvert::stringToPeripheral(const std::string inputString)
     {
         return PERIPHERAL_FCU;
     }
-    else if (inputString == "PERIPHERAL_CAM_ODOM")
+    else if (inputString == "PERIPHERAL_CAM_T265")
     {
-        return PERIPHERAL_CAM_ODOM;
+        return PERIPHERAL_CAM_T265;
     }
     else
     {

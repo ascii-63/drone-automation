@@ -72,11 +72,11 @@ void System::sendImage(const int _device, const std::string &_drone_id)
     ss << "\"image=@" << DEFAULT_IMAGE_DIR_PATH;
     switch (_device)
     {
-    case Peripheral::PERIPHERAL_CAM_DOWNWARD:
+    case Peripheral::PERIPHERAL_CAM_FLIR:
         ss << _drone_id << "-" << DEFAULT_FLIR_PNG << "\"";
         break;
 
-    case Peripheral::PERIPHERAL_CAM_FORWARD:
+    case Peripheral::PERIPHERAL_CAM_D455:
         ss << _drone_id << "-" << DEFAULT_D455_PNG << "\"";
         break;
 
@@ -101,14 +101,6 @@ std::string System::DEVICE_enumToString(const int _num)
         return "FLIR";
     case DEVICE::D455:
         return "D455";
-    case DEVICE::T265:
-        return "T265";
-    case DEVICE::LIDAR:
-        return "LIDAR";
-    case DEVICE::TERABEE:
-        return "Range Finder";
-    case DEVICE::RTK:
-        return "RTK";
     case DEVICE::FCU_STATE:
         return "MAV State";
     case DEVICE::FCU_IMU:
@@ -121,16 +113,10 @@ std::string System::DEVICE_enumToString(const int _num)
         return "MAV Absolute Pressure";
     case DEVICE::FCU_BAT:
         return "MAV Battery";
-    case DEVICE::FCU_MOTOR:
-        return "MAV Motor";
-    case DEVICE::FCU_AHRS:
-        return "MAV Accelerometer";
-    case DEVICE::FCU_TELE:
-        return "MAV Telemetry";
     case DEVICE::FCU_GPS:
         return "MAV GPS";
     default:
-        return "Unknown";
+        return "UNKNOWN";
     }
 }
 
@@ -144,12 +130,8 @@ std::string System::PERIPHERAL_STATUS_enumToString(const int _num)
         return "ACTIVE";
     case PERIPHERAL_STATUS::INACTIVE:
         return "INACTIVE";
-    case PERIPHERAL_STATUS::WAITING_FOR_ACTIVE:
-        return "WAITING_FOR_ACTIVE";
-    case PERIPHERAL_STATUS::NOT_FOUND:
-        return "NOT_FOUND";
     default:
-        return "Unknown";
+        return "UNKNOWN";
     }
 }
 
@@ -400,9 +382,11 @@ Communication::MQTT::Consumer::~Consumer() {}
 bool Communication::MQTT::Consumer::connect()
 {
     client = new mqtt::async_client(server_address, client_id);
-    std::cout << "OK 1" << std::endl;
     try
     {
+        // Start consumer before connecting to make sure to not miss messages
+        client->start_consuming();
+
         // Connect to the server
         auto token = client->connect(connection_options);
 
@@ -420,7 +404,7 @@ bool Communication::MQTT::Consumer::connect()
         std::cerr << exc.what() << '\n';
         return false;
     }
-    std::cout << "OK 2" << std::endl;
+
     return true;
 }
 
@@ -429,9 +413,6 @@ std::string Communication::MQTT::Consumer::consume()
     try
     {
         auto message = client->consume_message();
-        if (!message)
-            return ERROR_CONSUME_MESSAGE;
-
         return message->to_string();
     }
     catch (const std::system_error &e)
@@ -441,17 +422,6 @@ std::string Communication::MQTT::Consumer::consume()
                   << e.what() << "]\n";
     }
     return ERROR_CONSUME_MESSAGE;
-
-    // mqtt::const_message_ptr *this_msg;
-    // if (client->try_consume_message(this_msg))
-    // {
-    //     mqtt::const_message_ptr msg(*this_msg);
-    //     if (!msg)
-    //         return ERROR_CONSUME_MESSAGE;
-
-    //     return msg->to_string();
-    // }
-    // return ERROR_CONSUME_MESSAGE;
 }
 
 void Communication::MQTT::Consumer::disconnect()

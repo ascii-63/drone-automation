@@ -11,7 +11,6 @@
 #include "mqtt/async_client.h"
 
 const std::string DEFAULT_SERVER_ADDRESS = "tcp://localhost:1883";
-// const std::string CLIENT_ID = "ansync_publish";
 const std::string DEFAULT_PERSIST_DIR = "./persist";
 
 const int DEFAULT_QOS = 1;

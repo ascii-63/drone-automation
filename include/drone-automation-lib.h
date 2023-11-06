@@ -42,32 +42,27 @@
 #define FLAG_ALLOW_TO_FLY "FLAG_ALLOW_TO_FLY"
 #define FLAG_DENY_TO_FLY "FLAG_DENY_TO_FLY"
 
+#define MQTT_DEVICE_LIST_TOPIC "/device/list"
+#define MQTT_DEVICE_STATUS_TOPIC "/device/status"
+#define MQTT_MAV_STATE_TOPIC "/mav_state"
+
 enum PERIPHERAL_STATUS : int
 {
-    UNSPECIFIED = -1,   // The peripheral remains unused.
-    ACTIVE,             // Obtain the ACTIVE status once the message has been present for a continuous duration of 5 seconds.
-    INACTIVE,           // Retrieve the INACTIVE status when the message has been absent for a consecutive duration of 1 second.
-    WAITING_FOR_ACTIVE, // Acquire the WAITING_FOR_ACTIVE status if the message persists for less than 5 consecutive seconds.
-    NOT_FOUND           // The peripheral is required but cannot be located
+    UNSPECIFIED = -1, // The peripheral remains unused.
+    ACTIVE,           // Obtain the ACTIVE status once the message has been present for a continuous duration of 5 seconds.
+    INACTIVE          // Retrieve the INACTIVE status when the message has been absent for a consecutive duration of 1 second.
 };
 
 enum DEVICE : int
 {
     FLIR = 0,  // FLIR
     D455,      // D455
-    T265,      // T265
-    LIDAR,     // LIDAR
-    TERABEE,   // Range Finder
-    RTK,       // RTK
     FCU_STATE, // MAV State
     FCU_IMU,   // MAV IMU
     FCU_ODOM,  // MAV Odometry
     FCU_MAG,   // MAV Magnetometer
     FCU_PRES,  // MAV Absolute Pressure
     FCU_BAT,   // MAV Battery
-    FCU_MOTOR, // MAV Motor outputs, control
-    FCU_AHRS,  // MAV Accelerometer
-    FCU_TELE,  // MAV Telemetry (P900?)
     FCU_GPS    // MAV GPS
 };
 
