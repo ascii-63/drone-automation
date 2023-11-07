@@ -31,7 +31,7 @@
 
 #define DEFAULT_SEQ_YAML_FILE_PATH "/"
 #define DEFAULT_MISSION_DIR_PATH "/"
-#define DEFAULT_IMAGE_DIR_PATH "/"
+#define DEFAULT_IMAGE_DIR_PATH "~/image/"
 #define DEFAULT_FLIR_PNG "flir.png"
 #define DEFAULT_D455_PNG "d455.png"
 

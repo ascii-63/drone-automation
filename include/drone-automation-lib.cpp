@@ -90,7 +90,19 @@ void System::sendImage(const int _device, const std::string &_drone_id)
     ss1 << "http://localhost:" << DEFAULT_COMM_IMAGE_PORT << "/upload";
     curl_argv.push_back(ss1.str());
 
-    System::runCommand_system(curl_cmd, curl_argv);
+    try
+    {
+        System::runCommand_system(curl_cmd, curl_argv);
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+        return;
+    }
+
+    std::stringstream ss2;
+    ss2 << "[ INFO] " << System::DEVICE_enumToString(_device) << " image sended.";
+    Communication::netcat::sendMessage_echo_netcat(ss2.str(), DEFAULT_COMM_MSG_PORT);
 }
 
 std::string System::DEVICE_enumToString(const int _num)

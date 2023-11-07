@@ -96,6 +96,7 @@ bool peripheralsCheck()
     std::vector<int> device_list;
     mission.sequence_istructions[0]->Init_getPeripherals(device_list);
     std::stringstream ss;
+    ss << mission_id<< " ";
     for (auto dev : device_list)
         ss << dev << " ";
     std::string msg = ss.str();
@@ -125,14 +126,10 @@ bool peripheralsCheck()
 
     int FLIR_status = status[0], D455_status = status[1];
     if (FLIR_status == PERIPHERAL_STATUS::ACTIVE)
-    {
-        // PENDING
-    }
+        System::sendImage(Peripheral::PERIPHERAL_CAM_FLIR, mission_id);
     if (D455_status == PERIPHERAL_STATUS::ACTIVE)
-    {
-        // PENDING
-    }
-    
+        System::sendImage(Peripheral::PERIPHERAL_CAM_D455, mission_id);
+
     return true;
 }
 
@@ -179,8 +176,8 @@ bool missionExecution()
         return false;
 
     mission_id = mission.id;
-    vector3 this_home_gps; // Home GPS in the Init Instruction
-    mission.sequence_istructions[0]->Init_getHomePosition(this_home_gps);
+    vector3 home_gps; // Home GPS in the Init Instruction
+    mission.sequence_istructions[0]->Init_getHomePosition(home_gps);
 
     if (!YAMLConvert::fromMisisonToYAML(DEFAULT_SEQ_YAML_FILE_PATH))
     {
