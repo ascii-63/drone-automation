@@ -8,7 +8,6 @@ sleep 5
 roslaunch geometric_controller automatic.launch &
 sleep 5
 
-
 #############################################################
 
 # Realsense2 (D455 and T265)
