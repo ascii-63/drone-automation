@@ -20,6 +20,7 @@
 #include <geometry_msgs/Vector3.h>
 #include <std_msgs/Header.h>
 #include <std_msgs/String.h>
+#include <rosgraph_msgs/Log.h>
 
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
@@ -150,6 +151,33 @@ public:
     bool FCU_BAT_exist(const sensor_msgs::BatteryState::ConstPtr &msg);
 
     bool FCU_GPS_exist(const mavros_msgs::GPSINPUT::ConstPtr &msg);
+};
+
+/*****************************************************************************/
+
+#define DEFAULT_COMM_MSG_PORT 5100 // Send messages here
+
+void command_sys(const std::string &_command);
+
+class LogsHandler
+{
+public:
+    ros::NodeHandle nh;
+    // ros::NodeHandle nh_private_;
+
+    ros::Subscriber ROSOUT_sub;
+    ros::Subscriber EMB_sub;
+
+public:
+    LogsHandler();
+    LogsHandler(const ros::NodeHandle &_nh);
+    ~LogsHandler();
+
+    void debug();
+    void sendToComm(const std::string _msg);
+
+    void ROSOUT_callBack(const rosgraph_msgs::Log::ConstPtr &_log);
+    void EMB_callBack(const std_msgs::String::ConstPtr &_msg);
 };
 
 /*****************************************************************************/

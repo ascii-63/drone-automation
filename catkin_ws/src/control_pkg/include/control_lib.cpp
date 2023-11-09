@@ -299,6 +299,63 @@ void PeripheralsStatus::debug()
 //                                                                                            //
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
+void command_sys(const std::string &_command)
+{
+    std::system(_command.c_str());
+}
+
+LogsHandler::LogsHandler()
+{
+}
+
+LogsHandler::LogsHandler(const ros::NodeHandle &_nh) : nh(_nh)
+{
+    ROSOUT_sub = nh.subscribe("/rosout", 1000, &LogsHandler::ROSOUT_callBack, this);
+    EMB_sub = nh.subscribe("/emb", 1000, &LogsHandler::EMB_callBack, this);
+}
+
+LogsHandler::~LogsHandler()
+{
+}
+
+void LogsHandler::ROSOUT_callBack(const rosgraph_msgs::Log::ConstPtr &_log)
+{
+    if (_log->level == rosgraph_msgs::Log::ERROR || _log->level == rosgraph_msgs::Log::FATAL)
+    {
+        std::string message = _log->msg;
+        sendToComm(message);
+    }
+}
+
+void LogsHandler::EMB_callBack(const std_msgs::String::ConstPtr &_msg)
+{
+    std::string message = _msg->data;
+    sendToComm(message);
+}
+
+void LogsHandler::debug()
+{
+}
+
+void LogsHandler::sendToComm(const std::string _msg)
+{
+    std::stringstream ss;
+    ss << "echo \"" << _msg << "\" | nc -q 1 localhost " << DEFAULT_COMM_MSG_PORT;
+
+    std::thread thr(command_sys, ss.str()); // Create a new thread to run the command
+    thr.detach();                           // Detach the thread to run independently
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                            //
+//                                                                                            //
+//                                                                                            //
+//                                                                                            //
+//                                                                                            //
+//                                                                                            //
+//                                                                                            //
+////////////////////////////////////////////////////////////////////////////////////////////////
+
 void my_callback::connection_lost(const std::string &cause)
 {
     std::cout << "\nConnection lost" << std::endl;

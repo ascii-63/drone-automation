@@ -14,9 +14,6 @@ Communication::MQTT::Consumer *device_sub = new Communication::MQTT::Consumer(DE
 Communication::MQTT::Consumer *mav_state_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS,
                                                                                  "mm_mav_state_sub_client",
                                                                                  MQTT_MAV_STATE_TOPIC);
-Communication::MQTT::Consumer *ros_log_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS,
-                                                                               "mm_ros_log_sub_client",
-                                                                               MQTT_ROS_LOG_TOPIC);
 
 /* Lauch all requirement package in the bash file,
 Connect to the MQTT Server
@@ -45,7 +42,7 @@ inline bool requirementInit()
 
     ////////////////////////////
 
-    if (!device_pub->connect() || !device_sub->connect() || !mav_state_sub->connect() || !ros_log_sub->connect())
+    if (!device_pub->connect() || !device_sub->connect() || !mav_state_sub->connect())
     {
         Communication::netcat::sendMessage_echo_netcat("MQTT Startup error.", DEFAULT_COMM_MSG_PORT);
         return false;
