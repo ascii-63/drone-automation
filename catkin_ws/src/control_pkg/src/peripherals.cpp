@@ -30,33 +30,21 @@ int main(int argc, char **argv)
 {
     if (!firstRecive())
         return -1;
-    std::cout << "PASSED #1\n";
 
     ros::init(argc, argv, "control_node");
     ros::NodeHandle nh("");
     PeripheralsStatus *peripheral_status = new PeripheralsStatus(nh, mission_id, dev_list);
-    std::cout << "PASSED #2\n";
 
     while (ros::ok())
     {
         peripheral_status->callBack_exist();
-        std::cout << peripheral_status->MAV_STATE.size() << std::endl;
-        std::cout << "PASSED #3.1\n";
 
         std::string mav_state_msg = peripheral_status->MAV_STATE;
-        std::cout << "PASSED #3.2\n";
-
         std::string status_msg = peripheral_status->getStatus();
-        std::cout << "PASSED #3.3\n"
-                  << peripheral_status->status_vec.size() << std::endl;
-
         mav_state_pub->publish(mav_state_msg);
-        std::cout << mav_state_msg << std::endl;
-        std::cout << "PASSED #3.4\n";
-
         device_pub->publish(status_msg);
-        std::cout << status_msg << std::endl;
-        std::cout << "PASSED #3.5\n";
+
+        peripheral_status->debug();
 
         ros::spinOnce();
         ros::Duration(1).sleep();

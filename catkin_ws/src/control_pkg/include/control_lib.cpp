@@ -17,26 +17,18 @@ PeripheralsStatus::PeripheralsStatus(const ros::NodeHandle &_nh, std::string _id
     FCU_BAT_sub = nh.subscribe("/mavros/battery", 5, &PeripheralsStatus::FCU_BAT_CallBack, this);
     FCU_GPS_sub = nh.subscribe("/mavros/gps_input/gps_input", 5, &PeripheralsStatus::FCU_GPS_CallBack, this);
 
-    status_vec.reserve(NUM_OF_DEVICES);
-    used_vec.reserve(NUM_OF_DEVICES);
-    callback_vec.reserve(NUM_OF_DEVICES);
-    for (int i = 0; i < NUM_OF_DEVICES; i++)
-    {
-        status_vec[i] = PERIPHERAL_STATUS::UNSPECIFIED;
-        used_vec[i] = true;
-        callback_vec[i] = false;
-    }
+    status_vec.resize(NUM_OF_DEVICES, false);
+    used_vec.resize(NUM_OF_DEVICES, true);
+    callback_vec.resize(NUM_OF_DEVICES, false);
     used_vec[0] = false;
     used_vec[1] = false;
-    for (auto dev : _used)
-        used_vec[dev] = true;
+    for (auto idx : _used)
+        used_vec[idx] = true;
 
     d455_image_path = IMAGE_DIR_PATH;
     d455_image_path = d455_image_path + mission_id + "-d455.png";
     flir_image_path = IMAGE_DIR_PATH;
     flir_image_path = flir_image_path + mission_id + "-flir.png";
-
-    std::cout << "SIZE = " << status_vec.size() << " " << used_vec.size() << callback_vec.size() << std::endl;
 }
 
 PeripheralsStatus::~PeripheralsStatus()
@@ -280,8 +272,21 @@ std::string PeripheralsStatus::getStatus()
         if (i != status_vec.size() - 1)
             result += " ";
     }
-    std::cout << result << std::endl;
     return result;
+}
+
+void PeripheralsStatus::debug()
+{
+    std::cout << std::endl;
+    std::cout << "\nCALLBACK:";
+    for (auto idx : callback_vec)
+        std::cout << " " << idx;
+    std::cout << "\n    USED:";
+    for (auto idx : used_vec)
+        std::cout << " " << idx;
+    std::cout << "\n  STATUS:";
+    for (auto idx : status_vec)
+        std::cout << " " << idx;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////

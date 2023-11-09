@@ -124,7 +124,7 @@ bool peripheralsCheck()
 
     //////////////////////////////////
 
-    int FLIR_status = status[0], D455_status = status[1];
+    int FLIR_status = status[DEVICE::FLIR], D455_status = status[DEVICE::D455];
     if (FLIR_status == PERIPHERAL_STATUS::ACTIVE)
         System::sendImage(Peripheral::PERIPHERAL_CAM_FLIR, mission_id);
     if (D455_status == PERIPHERAL_STATUS::ACTIVE)

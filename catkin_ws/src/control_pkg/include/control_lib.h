@@ -53,8 +53,8 @@ const float GPS_max_VDOP = 1;
 enum PERIPHERAL_STATUS : int
 {
     UNSPECIFIED = -1, // The peripheral remains unused.
-    ACTIVE,           // Obtain the ACTIVE status once the message has been present for a continuous duration of 5 seconds.
-    INACTIVE          // Retrieve the INACTIVE status when the message has been absent for a consecutive duration of 1 second.
+    INACTIVE,
+    ACTIVE
 };
 
 enum DEVICE : int
@@ -108,6 +108,8 @@ public:
     void callBack_exist();
 
     std::string getStatus();
+
+    void debug();
 
     ////////////////////////////
 
