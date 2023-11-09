@@ -21,10 +21,6 @@ include_directories(
 # Specify library directories for jsoncpp and yaml-cpp
 link_directories(/usr/lib/x86_64-linux-gnu)
 
-# include_directories(
-# ${catkin_INCLUDE_DIRS}
-# )
-
 # Mission library
 set(MISSION_LIB_SRC ./include/mission_v1.cpp)
 add_library(mission_lib SHARED ${MISSION_LIB_SRC})
@@ -56,8 +52,19 @@ target_link_libraries(drone_lib
 # Mid-man
 add_executable(mid-man ./src/mid-man.cpp)
 target_link_libraries(mid-man
+    jsoncpp
+    yaml-cpp
+    Threads::Threads
+    PahoMqttCpp::paho-mqttpp3
 
-    # ${catkin_LIBRARIES}
+    mission_lib
+    mqtt_lib
+    drone_lib
+)
+
+# Cleaner
+add_executable(cleaner ./src/cleaner.cpp)
+target_link_libraries(cleaner
     jsoncpp
     yaml-cpp
     Threads::Threads
