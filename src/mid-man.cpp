@@ -1,13 +1,22 @@
-#include "std_msgs/String.h"
-
-#include <unistd.h>
-
+// #include "std_msgs/String.h"
 #include "drone-automation-lib.h"
 
 std::string mission_file; // Path to .json mission file
-Communication::MQTT::Publisher *device_pub = new Communication::MQTT::Publisher(DEFAULT_SERVER_ADDRESS, "mm_device_pub_client", MQTT_DEVICE_LIST_TOPIC);
-Communication::MQTT::Consumer *device_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS, "mm_device_sub_client", MQTT_DEVICE_STATUS_TOPIC);
-Communication::MQTT::Consumer *mav_state_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS, "mm_mav_state_sub_client", MQTT_MAV_STATE_TOPIC);
+bool flir_exist = false;  // True if FLIR Camera is ACTIVE
+bool d455_exist = false;  // True if D455 Camera is ACTIVE
+
+Communication::MQTT::Publisher *device_pub = new Communication::MQTT::Publisher(DEFAULT_SERVER_ADDRESS,
+                                                                                "mm_device_pub_client",
+                                                                                MQTT_DEVICE_LIST_TOPIC);
+Communication::MQTT::Consumer *device_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS,
+                                                                              "mm_device_sub_client",
+                                                                              MQTT_DEVICE_STATUS_TOPIC);
+Communication::MQTT::Consumer *mav_state_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS,
+                                                                                 "mm_mav_state_sub_client",
+                                                                                 MQTT_MAV_STATE_TOPIC);
+Communication::MQTT::Consumer *ros_log_sub = new Communication::MQTT::Consumer(DEFAULT_SERVER_ADDRESS,
+                                                                               "mm_ros_log_sub_client",
+                                                                               MQTT_ROS_LOG_TOPIC);
 
 /* Lauch all requirement package in the bash file,
 Connect to the MQTT Server
@@ -36,7 +45,7 @@ inline bool requirementInit()
 
     ////////////////////////////
 
-    if (!device_pub->connect() || !device_sub->connect() || !mav_state_sub->connect())
+    if (!device_pub->connect() || !device_sub->connect() || !mav_state_sub->connect() || !ros_log_sub->connect())
     {
         Communication::netcat::sendMessage_echo_netcat("MQTT Startup error.", DEFAULT_COMM_MSG_PORT);
         return false;
@@ -96,7 +105,7 @@ bool peripheralsCheck()
     std::vector<int> device_list;
     mission.sequence_istructions[0]->Init_getPeripherals(device_list);
     std::stringstream ss;
-    ss << mission_id<< " ";
+    ss << mission_id << " ";
     for (auto dev : device_list)
         ss << dev << " ";
     std::string msg = ss.str();
@@ -126,9 +135,17 @@ bool peripheralsCheck()
 
     int FLIR_status = status[DEVICE::FLIR], D455_status = status[DEVICE::D455];
     if (FLIR_status == PERIPHERAL_STATUS::ACTIVE)
+    {
+        flir_exist = true;
         System::sendImage(Peripheral::PERIPHERAL_CAM_FLIR, mission_id);
+        Communication::netcat::sendMessage_echo_netcat("[ INFO] FLIR image sended.", DEFAULT_COMM_MSG_PORT);
+    }
     if (D455_status == PERIPHERAL_STATUS::ACTIVE)
+    {
+        flir_exist = true;
         System::sendImage(Peripheral::PERIPHERAL_CAM_D455, mission_id);
+        Communication::netcat::sendMessage_echo_netcat("[ INFO] D455 image sended.", DEFAULT_COMM_MSG_PORT);
+    }
 
     return true;
 }
@@ -140,8 +157,43 @@ bool peripheralsCheck()
  */
 bool confirmProcess()
 {
-    /* PENDING */
-    return true;
+    if (!flir_exist && !d455_exist)
+        Communication::netcat::sendMessage_echo_netcat("[ INFO] Skip image confirm FLAGs checking: No image sended.", DEFAULT_COMM_MSG_PORT);
+    else
+    {
+        const int num_img_confirm_req = flir_exist + d455_exist;
+        int count = 0;
+        while (count < num_img_confirm_req)
+        {
+            std::string flag;
+            bool result = System::getNewestFLAG(DEFAULT_CONTROL_CONFIRM_PORT, flag);
+            if (result)
+            {
+                if (flag == FLAG_CAM_REJECT)
+                    return false;
+                if (flag == FLAG_CAM_ALLOW)
+                    count++;
+            }
+        }
+    }
+
+    ////////////////////////////////////////////
+
+    Communication::netcat::sendMessage_echo_netcat("[ INFO] Waiting for permission to fly. Timeout: 120 seconds.", DEFAULT_COMM_MSG_PORT);
+
+    ////////////////////////////////////////////
+
+    std::string flag;
+    while (flag != FLAG_ALLOW_TO_FLY && flag != FLAG_DENY_TO_FLY)
+    {
+        bool result = System::getNewestFLAG(DEFAULT_CONTROL_CONFIRM_PORT, flag);
+        if (flag == FLAG_ALLOW_TO_FLY)
+            return true;
+        if (flag == FLAG_DENY_TO_FLY)
+            return false;
+    }
+
+    return false;
 }
 
 // Init Intruction Execution
@@ -217,6 +269,21 @@ int main()
         return -1;
     if (!missionExecution())
         return -2;
+
+    while (true)
+    {
+        std::string status_msg = device_sub->consume();
+        std::string mav_state_msg = mav_state_sub->consume();
+        sendDeviceStatus(mav_state_msg, status_msg);
+
+        if (flir_exist)
+            System::sendImage(DEVICE::FLIR, mission_id);
+        if (d455_exist)
+            System::sendImage(DEVICE::D455, mission_id);
+
+        System::threadSleeper(DEFAULT_TIME_BETWEEN_2_IMAGE);
+    }
+
     cleaner();
 
     return 0;

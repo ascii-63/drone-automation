@@ -6,15 +6,14 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-
 #include <vector>
 #include <string>
 #include <queue>
 #include <map>
-
 #include <chrono>
 #include <thread>
 #include <algorithm>
+#include <iomanip>
 
 #include <yaml-cpp/yaml.h>
 #include "mqtt/async_client.h"
@@ -25,17 +24,19 @@
 
 #define vector3 std::vector<double>
 
-#define LOCAL_HOST "127.0.0.1"       // Localhost IP
-#define DEFAULT_COMM_IMAGE_PORT 5000 // Send image here
-#define DEFAULT_COMM_MSG_PORT 5100   // Send messages here
+#define LOCAL_HOST "127.0.0.1"             // Localhost IP
+#define DEFAULT_COMM_IMAGE_PORT 5000       // Send image here
+#define DEFAULT_COMM_MSG_PORT 5100         // Send messages here
+#define DEFAULT_CONTROL_CONFIRM_PORT 24000 // Listen for the confirm here
 
-#define DEFAULT_SEQ_YAML_FILE_PATH "/"
-#define DEFAULT_MISSION_DIR_PATH "/"
+#define DEFAULT_SEQ_YAML_FILE_PATH "/" /* NEED UPDATE */
+#define DEFAULT_MISSION_DIR_PATH "~/drone-automation/gcs-comm-service/mission/"
 #define DEFAULT_IMAGE_DIR_PATH "~/image/"
 #define DEFAULT_FLIR_PNG "flir.png"
 #define DEFAULT_D455_PNG "d455.png"
 
-#define DEFAULT_GCS_CONFIRM_TIMEOUT 120
+#define DEFAULT_GCS_CONFIRM_TIMEOUT 120 // In seconds
+#define DEFAULT_TIME_BETWEEN_2_IMAGE 5  // In seconds
 
 #define FLAG_CAM_ALLOW "FLAG_CAM_ALLOW"
 #define FLAG_CAM_REJECT "FLAG_CAM_REJECT"
@@ -45,6 +46,7 @@
 #define MQTT_DEVICE_LIST_TOPIC "/device/list"
 #define MQTT_DEVICE_STATUS_TOPIC "/device/status"
 #define MQTT_MAV_STATE_TOPIC "/mav_state"
+#define MQTT_ROS_LOG_TOPIC "/ros_log"
 
 enum PERIPHERAL_STATUS : int
 {

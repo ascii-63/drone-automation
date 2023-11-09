@@ -20,9 +20,10 @@ include_directories(
 
 # Specify library directories for jsoncpp and yaml-cpp
 link_directories(/usr/lib/x86_64-linux-gnu)
-include_directories(
-    ${catkin_INCLUDE_DIRS}
-)
+
+# include_directories(
+# ${catkin_INCLUDE_DIRS}
+# )
 
 # Mission library
 set(MISSION_LIB_SRC ./include/mission_v1.cpp)
@@ -55,7 +56,8 @@ target_link_libraries(drone_lib
 # Mid-man
 add_executable(mid-man ./src/mid-man.cpp)
 target_link_libraries(mid-man
-    ${catkin_LIBRARIES}
+
+    # ${catkin_LIBRARIES}
     jsoncpp
     yaml-cpp
     Threads::Threads

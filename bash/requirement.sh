@@ -12,9 +12,9 @@ sleep 5
 #############################################################
 
 # Realsense2 (D455 and T265)
-# roslaunch realsense2_camera rs_camera.launch &
-# sleep 5
-echo "SKIP REALSENSE PACKAGE: No REALSENSE camera device connected."
+roslaunch realsense2_camera rs_camera.launch &
+sleep 5
+# echo "SKIP REALSENSE PACKAGE: No REALSENSE camera device connected."
 
 # Spinnaker (FLIR)
 roslaunch spinnaker_camera_driver color_cam.launch &

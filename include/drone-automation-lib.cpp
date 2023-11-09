@@ -72,11 +72,11 @@ void System::sendImage(const int _device, const std::string &_drone_id)
     ss << "\"image=@" << DEFAULT_IMAGE_DIR_PATH;
     switch (_device)
     {
-    case Peripheral::PERIPHERAL_CAM_FLIR:
+    case DEVICE::FLIR:
         ss << _drone_id << "-" << DEFAULT_FLIR_PNG << "\"";
         break;
 
-    case Peripheral::PERIPHERAL_CAM_D455:
+    case DEVICE::D455:
         ss << _drone_id << "-" << DEFAULT_D455_PNG << "\"";
         break;
 
@@ -308,8 +308,8 @@ std::string Communication::netcat::receiveMessage_netcat(const int _port, const 
         pclose(pipe); // Close the pipe
     } while (line.empty());
 
-    // For testing using echo, uncomment this below line
-    line.pop_back();
+    // // For testing using echo, uncomment this below line
+    // line.pop_back();
 
     result = line;
     _result = true;
