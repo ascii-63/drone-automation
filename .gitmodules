@@ -1,3 +1,19 @@
 [submodule "gcs-comm-service"]
 	path = gcs-comm-service
 	url = https://github.com/saltmurai/gcs-comm-service.git
+
+[submodule "vcpkg"]
+	path = vcpkg
+	url = https://github.com/microsoft/vcpkg.git
+
+[submodule "emb"]
+	path = catkin_ws/src/emb
+	url = https://github.com/ana-lys/emb.git
+
+[submodule "flir_camera_driver"]
+	path = catkin_ws/src/flir_camera_driver
+	url = https://github.com/ros-drivers/flir_camera_driver.git
+
+[submodule "realsense-ros"]
+	path = catkin_ws/src/realsense-ros
+	url = https://github.com/IntelRealSense/realsense-ros.git

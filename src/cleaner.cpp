@@ -34,14 +34,14 @@ void addToKillList(const std::string _process)
 void killProcesses()
 {
     addToKillList("rosmaster");
-    // addToKillList("mavros");
-    // addToKillList("px4");
-    // addToKillList("gazebo");
-    // addToKillList("spinnaker");
-    // addToKillList("realsense2");
-    // addToKillList("peripherals_node");
-    // addToKillList("log_node");
-    // addToKillList("control_pkg");
+    addToKillList("mavros");
+    addToKillList("px4");
+    addToKillList("gazebo");
+    addToKillList("spinnaker");
+    addToKillList("realsense2");
+    addToKillList("peripherals_node");
+    addToKillList("log_node");
+    addToKillList("control_pkg");
     addToKillList("requirement");
     addToKillList("seq_controller");
     addToKillList("mid-man");
@@ -57,7 +57,6 @@ void killProcesses()
         std::system(cmd.c_str());
         System::sleep_msecs(0.1);
         std::cout << " " << pid;
-        cmd.clear();
     }
 
     System::sleep_msecs(0.1);
@@ -80,9 +79,10 @@ int main()
 {
     killProcesses();
     clearDir(DEFAULT_IMAGE_DIR_PATH);
-    clearDir(DEFAULT_MISSION_DIR_PATH);
+    // clearDir(DEFAULT_MISSION_DIR_PATH);
 
-    std::cout << "************************" << std::endl
+    std::cout << std::endl
+              << "************************" << std::endl
               << "*  Cleaner completed!  *" << std::endl
               << "************************" << std::endl
               << std::endl;

@@ -23,13 +23,14 @@ inline bool requirementInit()
     std::string cmd = "bash";
     std::vector<std::string> argv;
 
-    std::string path_to_bash_scripts = get_current_dir_name();
-    path_to_bash_scripts = path_to_bash_scripts + "/../bash/requirement.sh";
+    // std::string path_to_bash_scripts = get_current_dir_name();
+    // path_to_bash_scripts = path_to_bash_scripts + "/../bash/requirement.sh";
+    std::string path_to_bash_scripts = "/home/pino/drone-automation/bash/requirement.sh";
 
     try
     {
 
-        System::runCommand_system(cmd, argv);
+        // System::runCommand_system(cmd, argv);
         cmd.clear();
         argv.clear();
     }

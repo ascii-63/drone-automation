@@ -24,14 +24,14 @@
 
 #define vector3 std::vector<double>
 
-#define LOCAL_HOST "127.0.0.1"             // Localhost IP
-#define DEFAULT_COMM_IMAGE_PORT 5000       // Send image here
-#define DEFAULT_COMM_MSG_PORT 5100         // Send messages here
+#define LOCAL_HOST "127.0.0.1"            // Localhost IP
+#define DEFAULT_COMM_IMAGE_PORT 5000      // Send image here
+#define DEFAULT_COMM_MSG_PORT 5100        // Send messages here
 #define DEFAULT_CONTROL_CONFIRM_PORT 4000 // Listen for the confirm here
 
-#define DEFAULT_SEQ_YAML_FILE_PATH "/" /* NEED UPDATE */
-#define DEFAULT_MISSION_DIR_PATH "~/drone-automation/gcs-comm-service/mission/"
-#define DEFAULT_IMAGE_DIR_PATH "~/image/"
+#define DEFAULT_SEQ_YAML_FILE_PATH "/home/pino/drone-automation/catkin_ws/src/emb/px4_controllers/sequence_controller/cfg/seq.yaml"
+#define DEFAULT_MISSION_DIR_PATH "/home/pino/drone-automation/gcs-comm-service/mission/"
+#define DEFAULT_IMAGE_DIR_PATH "/home/pino/image/"
 #define DEFAULT_FLIR_PNG "flir.png"
 #define DEFAULT_D455_PNG "d455.png"
 

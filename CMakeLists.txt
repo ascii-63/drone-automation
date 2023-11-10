@@ -109,3 +109,15 @@ target_link_libraries(test_a_c
     mqtt_lib
     drone_lib
 )
+
+add_executable(my_test ./temp/test.cpp)
+target_link_libraries(my_test
+    jsoncpp
+    yaml-cpp
+    Threads::Threads
+    PahoMqttCpp::paho-mqttpp3
+
+    mission_lib
+    mqtt_lib
+    drone_lib
+)

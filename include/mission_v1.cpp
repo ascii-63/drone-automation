@@ -410,7 +410,7 @@ bool jsonParsing::handleInitSequence(const Json::Value &_sequence, InitInstructi
     for (const auto &value : peripheral)
     {
         int peripheralValue = value.asInt();
-        this_peripherals.push_back(peripheralValue);
+        this_peripherals.push_back(peripheralValue - 1); // CHECK HERE
     }
     _init_instruction.peripherals = this_peripherals;
 

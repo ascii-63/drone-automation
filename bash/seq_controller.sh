@@ -1,7 +1,11 @@
 #! /bin/bash
+# source ~/.bashrc
 
-source ~/.bashrc
+#############################################################
 
-rosrun sequence_controller parser &
+# rosrun sequence_controller parser &
+# sleep 5
 
-sleep 5
+#############################################################
+
+echo "WORKED."
