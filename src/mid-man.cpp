@@ -113,8 +113,8 @@ bool peripheralsCheck()
 
     //////////////////////////////////
 
-    std::string status = device_sub->consume();
-    if (status == Communication::MQTT::ERROR_CONSUME_MESSAGE)
+    std::string status_str = device_sub->consume();
+    if (status_str == Communication::MQTT::ERROR_CONSUME_MESSAGE)
     {
         Communication::netcat::sendMessage_echo_netcat("[ERROR] Bad consume.", DEFAULT_COMM_MSG_PORT);
         return false;
@@ -127,11 +127,19 @@ bool peripheralsCheck()
         return false;
     }
 
-    sendDeviceStatus(mav_state, status);
+    sendDeviceStatus(mav_state, status_str);
+    std::vector<int> status_vec;
+    std::stringstream ss1(status_str);
+    int status_num;
+    while (ss1 >> status_num)
+    {
+        status_vec.push_back(status_num);
+        std::cout << "DEVICE STATUS: " << status_num << std::endl;
+    }
 
     //////////////////////////////////
 
-    int FLIR_status = status[DEVICE::FLIR], D455_status = status[DEVICE::D455];
+    int FLIR_status = status_vec[DEVICE::FLIR], D455_status = status_vec[DEVICE::D455];
     if (FLIR_status == PERIPHERAL_STATUS::ACTIVE)
     {
         flir_exist = true;
@@ -182,7 +190,7 @@ bool confirmProcess()
     ////////////////////////////////////////////
 
     std::string flag;
-    while (flag != FLAG_ALLOW_TO_FLY && flag != FLAG_DENY_TO_FLY)
+    while (flag.empty())
     {
         bool result = System::getNewestFLAG(DEFAULT_CONTROL_CONFIRM_PORT, flag);
         if (flag == FLAG_ALLOW_TO_FLY)

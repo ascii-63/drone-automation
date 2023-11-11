@@ -35,14 +35,23 @@ int main(int argc, char **argv)
     ros::NodeHandle nh("");
     PeripheralsStatus *peripheral_status = new PeripheralsStatus(nh, mission_id, dev_list);
 
+    auto start_time = ros::Time::now();
+    auto first_status_duration = ros::Duration(10);
+
     while (ros::ok())
     {
         peripheral_status->callBack_exist();
 
-        std::string mav_state_msg = peripheral_status->MAV_STATE;
-        std::string status_msg = peripheral_status->getStatus();
-        mav_state_pub->publish(mav_state_msg);
-        device_pub->publish(status_msg);
+        auto current_time = ros::Time::now();
+        auto release_time = current_time - start_time;
+        if (release_time > first_status_duration)
+        {
+
+            std::string mav_state_msg = peripheral_status->MAV_STATE;
+            std::string status_msg = peripheral_status->getStatus();
+            mav_state_pub->publish(mav_state_msg);
+            device_pub->publish(status_msg);
+        }
 
         peripheral_status->debug();
 

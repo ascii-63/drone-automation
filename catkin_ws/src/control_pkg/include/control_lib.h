@@ -49,7 +49,7 @@ const float GPS_max_HDOP = 1;
 const float GPS_max_VDOP = 1;
 
 #define NUM_OF_DEVICES 9
-#define IMAGE_DIR_PATH "~/image/"
+#define IMAGE_DIR_PATH "/home/pino/image/"
 
 enum PERIPHERAL_STATUS : int
 {

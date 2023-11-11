@@ -65,6 +65,7 @@ void PeripheralsStatus::FLIR_CallBack(const wfov_camera_msgs::WFOVImage::ConstPt
     try
     {
         imwrite_status = cv::imwrite(flir_image_path, cv_image);
+        std::cout << "FLIR image!" << std::endl;
     }
     catch (cv_bridge::Exception &e)
     {
@@ -340,7 +341,7 @@ void LogsHandler::debug()
 void LogsHandler::sendToComm(const std::string _msg)
 {
     std::stringstream ss;
-    ss << "echo \"" << _msg << "\" | nc -q 1 localhost " << DEFAULT_COMM_MSG_PORT;
+    ss << "echo \"[ERROR] " << _msg << "\" | nc -q 1 localhost " << DEFAULT_COMM_MSG_PORT;
 
     std::thread thr(command_sys, ss.str()); // Create a new thread to run the command
     thr.detach();                           // Detach the thread to run independently

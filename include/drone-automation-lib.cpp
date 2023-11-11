@@ -205,14 +205,16 @@ bool System::getNewestFLAG(const int _port, std::string &_flag_handle)
     do
     {
         line = Communication::netcat::receiveMessage_netcat(_port, DEFAULT_GCS_CONFIRM_TIMEOUT, result);
+        // For testing using echo, uncomment this below line
+        line.pop_back();
     } while (!result);
 
-    if (line != FLAG_ALLOW_TO_FLY && line != FLAG_DENY_TO_FLY)
-    {
-        Communication::netcat::sendMessage_echo_netcat("[ERROR] Not received any CONFIRM FLAGs after TIMEOUT duration, stop listening.", DEFAULT_COMM_MSG_PORT);
-        _flag_handle = "";
-        return false;
-    }
+    // if (line != FLAG_ALLOW_TO_FLY && line != FLAG_DENY_TO_FLY)
+    // {
+    //     Communication::netcat::sendMessage_echo_netcat("[ERROR] Not received any CONFIRM FLAGs after TIMEOUT duration, stop listening.", DEFAULT_COMM_MSG_PORT);
+    //     _flag_handle = "";
+    //     return false;
+    // }
 
     _flag_handle = line;
     return true;
@@ -241,8 +243,7 @@ bool System::seqControllerLauching()
     {
         std::string cmd = "bash";
         std::vector<std::string> argv;
-        std::string path = get_current_dir_name();
-        path = path + "/../bash/seq_controller.sh";
+        std::string path = "/home/pino/drone-automation/bash/seq_controller.sh";
         System::runCommand_system(cmd, argv);
     }
     catch (const std::exception &e)
@@ -272,7 +273,7 @@ void Communication::netcat::sendMessage_echo_netcat(const std::string &_message,
 
 std::string Communication::netcat::receiveMessage_netcat(const int _port, const int _timeout, bool &_result)
 {
-    std::string command = "nc -l -p 24000";
+    std::string command = "nc -l -p " + std::to_string(_port);
     std::string line;
     std::string result = "";
 
@@ -307,9 +308,6 @@ std::string Communication::netcat::receiveMessage_netcat(const int _port, const 
         }
         pclose(pipe); // Close the pipe
     } while (line.empty());
-
-    // // For testing using echo, uncomment this below line
-    // line.pop_back();
 
     result = line;
     _result = true;
