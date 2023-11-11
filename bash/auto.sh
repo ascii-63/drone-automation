@@ -1,7 +1,7 @@
 #! /bin/bash
 #############################################################
 
-/home/pino/drone-automation/build/cleaner
+# /home/pino/drone-automation/build/cleaner
 
 #############################################################
 
@@ -11,8 +11,7 @@
 
 #############################################################
 
-echo "source .bashrc and roscore..."
-
+echo "source .bashrc"
 source /home/pino/.bashrc
 sleep 1
 
@@ -20,13 +19,11 @@ sleep 1
 
 echo "launch mavros and geometric_controller..."
 
-# roslaunch mavros px4.launch fcu_url:="udp://:14540@localhost:14557" &
-# roslaunch px4 mavros_posix_sitl.launch &
-roslaunch mavros px4.launch &
-sleep 10
+roslaunch mavros px4.launch fcu_url:="udp://:14540@localhost:14557" &
+# # roslaunch mavros px4.launch &
 
 roslaunch geometric_controller automatic.launch &
-sleep 10
+sleep 1
 
 #############################################################
 

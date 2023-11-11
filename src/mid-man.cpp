@@ -234,7 +234,7 @@ bool missionExecution()
         return false;
 
     mission_id = mission.id;
-    vector3 home_gps; // Home GPS in the Init Instruction
+    // vector3 home_gps; // Home GPS in the Init Instruction
     mission.sequence_istructions[0]->Init_getHomePosition(home_gps);
 
     if (!YAMLConvert::fromMisisonToYAML(DEFAULT_SEQ_YAML_FILE_PATH))
