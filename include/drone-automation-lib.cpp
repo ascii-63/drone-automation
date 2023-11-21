@@ -459,7 +459,7 @@ int YAMLConvert::terminatorToFailsafe(const int _terminator)
         return mission.number_sequence_items + 1;
 
     default:
-        return -1;
+        return mission.number_sequence_items;
     }
     return -1;
 }
@@ -525,11 +525,11 @@ bool YAMLConvert::travelSeqHandle(SingleInstruction *_travel_instruction, YAML::
 
     planner = _travel_instruction->Travel_getPlanner();
     _travel_instruction->Travel_getWaypoints(waypoints);
-    _travel_instruction->Travel_getConstraints(constraints);
-    if (constraints.size() > 0)
-        vmax = constraints[0];
-    if (constraints.size() > 1)
-        amax = constraints[1];
+    // _travel_instruction->Travel_getConstraints(constraints);
+    // if (constraints.size() > 0)
+    //     vmax = constraints[0];
+    // if (constraints.size() > 1)
+    //     amax = constraints[1];
     terminator = _travel_instruction->Travel_getTerminator();
 
     /*************************************************/

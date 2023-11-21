@@ -20,7 +20,7 @@ sleep 1
 echo "launch mavros and geometric_controller..."
 
 roslaunch mavros px4.launch fcu_url:="udp://:14540@localhost:14557" &
-# # roslaunch mavros px4.launch &
+# roslaunch mavros px4.launch &
 
 roslaunch geometric_controller automatic.launch &
 sleep 1
@@ -40,10 +40,10 @@ sleep 5
 echo "launch realsense2 and spinnaker driver for camera..."
 
 # roslaunch realsense2_camera rs_camera.launch &
-# sleep 10
+# sleep 1
 
 roslaunch spinnaker_camera_driver color_cam.launch &
-sleep 10
+sleep 1
 
 #############################################################
 

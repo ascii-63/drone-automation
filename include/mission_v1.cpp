@@ -398,6 +398,13 @@ double ActionInstruction::Action_getTimeOut()
 
 /********************* JSON PARSING NAMESPACE *********************/
 
+inline void jsonParsing::latLongSwap(vector3 &_gps)
+{
+    double temp = _gps[0];
+    _gps[0] = _gps[1];
+    _gps[1] = temp;
+}
+
 bool jsonParsing::handleInitSequence(const Json::Value &_sequence, InitInstruction &_init_instruction)
 {
     const Json::Value &peripheral = _sequence["peripheral"];
@@ -432,6 +439,7 @@ bool jsonParsing::handleInitSequence(const Json::Value &_sequence, InitInstructi
         double gpsValue = value.asDouble();
         this_home_gps.push_back(gpsValue);
     }
+    jsonParsing::latLongSwap(this_home_gps);
     _init_instruction.home_position = this_home_gps;
 
     double this_timeout = _sequence["timeout"].asDouble();
@@ -469,34 +477,46 @@ bool jsonParsing::handleTravelSequence(const Json::Value &_sequence, TravelInstr
         return false;
     }
     std::vector<vector3> this_waypoints;
-    for (const auto &point : waypoints)
+    // for (const auto &point : waypoints)
+    // {
+    //     std::vector<double> temp_vector3;
+    //     temp_vector3.push_back(point[0].asDouble());
+    //     temp_vector3.push_back(point[1].asDouble());
+    //     temp_vector3.push_back(point[2].asDouble());
+    //     jsonParsing::latLongSwap(temp_vector3);
+    //     this_waypoints.push_back(temp_vector3);
+    // }
+    for (const auto &vector_point : waypoints)
     {
+        const Json::Value &vec = vector_point["vector"];
+        if (!vec.isArray())
+            continue;
         std::vector<double> temp_vector3;
-        temp_vector3.push_back(point[0].asDouble());
-        temp_vector3.push_back(point[1].asDouble());
-        temp_vector3.push_back(point[2].asDouble());
-
+        temp_vector3.push_back(vec[0].asDouble());
+        temp_vector3.push_back(vec[1].asDouble());
+        temp_vector3.push_back(vec[2].asDouble());
+        jsonParsing::latLongSwap(temp_vector3);
         this_waypoints.push_back(temp_vector3);
     }
     _travel_instruction.waypoints = this_waypoints;
 
-    const Json::Value &constraints = _sequence["constraint"];
-    if (!constraints.isArray())
-    {
-        std::cerr << "The format of the constraints array is incorrect." << std::endl;
-        return false;
-    }
-    std::vector<vector3> this_constraints;
-    for (const auto &constr : constraints)
-    {
-        std::vector<double> temp_vector3;
-        temp_vector3.push_back(constr[0].asDouble());
-        temp_vector3.push_back(constr[1].asDouble());
-        temp_vector3.push_back(constr[2].asDouble());
-
-        this_constraints.push_back(temp_vector3);
-    }
-    _travel_instruction.constraints = this_constraints;
+    // const Json::Value &constraints = _sequence["constraint"];
+    // if (!constraints.isArray())
+    // {
+    //     std::cerr << "The format of the constraints array is incorrect." << std::endl;
+    //     return false;
+    // }
+    // std::vector<vector3> this_constraints;
+    // for (const auto &constr : constraints)
+    // {
+    //     std::vector<double> temp_vector3;
+    //     temp_vector3.push_back(constr[0].asDouble());
+    //     temp_vector3.push_back(constr[1].asDouble());
+    //     temp_vector3.push_back(constr[2].asDouble());
+    //     jsonParsing::latLongSwap(temp_vector3);
+    //     this_constraints.push_back(temp_vector3);
+    // }
+    // _travel_instruction.constraints = this_constraints;
 
     std::string this_terminator = _sequence["terminate"].asString();
     _travel_instruction.terminator = enumConvert::stringToTerminator(this_terminator);

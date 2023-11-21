@@ -256,6 +256,9 @@ public:
 
 namespace jsonParsing
 {
+    // Swap lat, long in a GPS vector3
+    inline void latLongSwap(vector3 &_gps);
+
     // Function to handle init_sequence
     bool handleInitSequence(const Json::Value &_sequence, InitInstruction &_init_instruction);
 
