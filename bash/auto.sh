@@ -5,9 +5,9 @@
 
 #############################################################
 
-# echo "gcs-comm-service launching"
-# cd /home/pino/drone-automation/gcs-comm-service && sudo docker-compose up &
-# sleep 5
+echo "gcs-comm-service launching"
+cd /home/pino/drone-automation/gcs-comm-service && sudo docker-compose up &
+sleep 3
 
 #############################################################
 
