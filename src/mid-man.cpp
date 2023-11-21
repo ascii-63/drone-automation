@@ -113,20 +113,22 @@ bool peripheralsCheck()
 
     //////////////////////////////////
 
-    std::string status_str = device_sub->consume();
-    if (status_str == Communication::MQTT::ERROR_CONSUME_MESSAGE)
+    std::string status_str, mav_state;
+    while (mav_state.empty())
     {
-        Communication::netcat::sendMessage_echo_netcat("[ERROR] Bad consume.", DEFAULT_COMM_MSG_PORT);
-        return false;
+        status_str = device_sub->consume();
+        if (status_str == Communication::MQTT::ERROR_CONSUME_MESSAGE)
+        {
+            Communication::netcat::sendMessage_echo_netcat("[ERROR] Bad consume.", DEFAULT_COMM_MSG_PORT);
+            return false;
+        }
+        mav_state = mav_state_sub->consume();
+        if (mav_state == Communication::MQTT::ERROR_CONSUME_MESSAGE)
+        {
+            Communication::netcat::sendMessage_echo_netcat("[ERROR] Bad consume.", DEFAULT_COMM_MSG_PORT);
+            return false;
+        }
     }
-
-    std::string mav_state = mav_state_sub->consume();
-    if (mav_state == Communication::MQTT::ERROR_CONSUME_MESSAGE)
-    {
-        Communication::netcat::sendMessage_echo_netcat("[ERROR] Bad consume.", DEFAULT_COMM_MSG_PORT);
-        return false;
-    }
-
     sendDeviceStatus(mav_state, status_str);
     std::vector<int> status_vec;
     std::stringstream ss1(status_str);

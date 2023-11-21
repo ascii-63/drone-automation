@@ -46,14 +46,13 @@ int main(int argc, char **argv)
         auto release_time = current_time - start_time;
         if (release_time > first_status_duration)
         {
-
             std::string mav_state_msg = peripheral_status->MAV_STATE;
             std::string status_msg = peripheral_status->getStatus();
             mav_state_pub->publish(mav_state_msg);
             device_pub->publish(status_msg);
         }
 
-        peripheral_status->debug();
+        // peripheral_status->debug();
 
         ros::spinOnce();
         ros::Duration(1).sleep();

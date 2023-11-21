@@ -65,7 +65,7 @@ void PeripheralsStatus::FLIR_CallBack(const wfov_camera_msgs::WFOVImage::ConstPt
     try
     {
         imwrite_status = cv::imwrite(flir_image_path, cv_image);
-        std::cout << "FLIR image!" << std::endl;
+        // std::cout << "FLIR image!" << std::endl;
     }
     catch (cv_bridge::Exception &e)
     {

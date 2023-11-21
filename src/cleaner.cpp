@@ -79,7 +79,7 @@ int main()
 {
     killProcesses();
     clearDir(DEFAULT_IMAGE_DIR_PATH);
-    // clearDir(DEFAULT_MISSION_DIR_PATH);
+    clearDir(DEFAULT_MISSION_DIR_PATH);
 
     std::cout << std::endl
               << "************************" << std::endl

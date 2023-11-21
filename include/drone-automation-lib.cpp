@@ -205,8 +205,8 @@ bool System::getNewestFLAG(const int _port, std::string &_flag_handle)
     do
     {
         line = Communication::netcat::receiveMessage_netcat(_port, DEFAULT_GCS_CONFIRM_TIMEOUT, result);
-        // For testing using echo, uncomment this below line
-        line.pop_back();
+        // // For testing using echo, uncomment this below line
+        // line.pop_back();
     } while (!result);
 
     // if (line != FLAG_ALLOW_TO_FLY && line != FLAG_DENY_TO_FLY)
@@ -244,6 +244,7 @@ bool System::seqControllerLauching()
         std::string cmd = "bash";
         std::vector<std::string> argv;
         std::string path = "/home/pino/drone-automation/bash/seq_controller.sh";
+        argv.push_back(path);
         System::runCommand_system(cmd, argv);
     }
     catch (const std::exception &e)

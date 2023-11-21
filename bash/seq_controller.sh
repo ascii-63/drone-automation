@@ -1,8 +1,7 @@
 #! /bin/bash
 
-# source ~/.bashrc
+source ~/.bashrc
 
 #############################################################
 
-rosrun sequence_controller parser &
-sleep 5
+rosrun sequence_controller parser
